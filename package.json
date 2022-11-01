@@ -1,0 +1,19 @@
+{
+  "name": "joint_documentation",
+  "version": "1.0.0",
+  "description": "jonint 中文文档",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vuepress dev docs",
+    "build": "vuepress build docs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vue-template-compiler": "^2.7.13",
+    "vuepress-plugin-fulltext-search": "^2.2.1"
+  }
+}
