@@ -1,6 +1,6 @@
 ---
 home: true
-actionText: Get Started →
+actionText: 开始 →
 actionLink: /tutorial/
 features:
 - title: JointJS

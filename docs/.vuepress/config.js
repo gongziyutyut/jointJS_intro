@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Welcome to JointJS',
+  title: 'JointJS',
   description: '中文文档',
   plugins: ['fulltext-search'],
   configureWebpack: {
