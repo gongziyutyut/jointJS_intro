@@ -89,7 +89,7 @@
 
 ## 画布样式
 
-现在，我们对最初的 <em>Hello World</em> 应用外观做些改变。我们可以使用 <code>background</code> 属性定义背景色，并使用 <code>drawGrid</code> 来绘制栅格。为了栅格可展示，我们也需要增加<code>gridSize</code>：
+现在，我们对最初的 <em><strong>Hello World</strong></em> 应用外观做些改变。我们可以使用 <code>background</code> 属性定义背景色，并使用 <code>drawGrid</code> 来绘制栅格。为了栅格可展示，我们也需要增加<code>gridSize</code>：
 
 代码如下，更改部分高亮展示：
 ```html
@@ -171,4 +171,4 @@ paper.scale(0.5, 0.5);
 paper.translate(300, 50);
 :::
 
-我们现在已经了解了图表（Graph）和画布（Paper）对象的重要性，并且知道了如何更改画布（paper）的外观。接下来，我们学习如何使用 <code>elements</code>
+我们现在已经了解了图表（Graph）和画布（Paper）对象的重要性，并且知道了如何更改画布（paper）的外观。接下来，我们学习如何使用 <a href="/tutorial/intro/element.html">elements</a>

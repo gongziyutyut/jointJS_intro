@@ -12,7 +12,7 @@ module.exports = {
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
-      { text: '引导', link: '/tutorial/' },
+      { text: '教程', link: '/tutorial/' },
     ],
     sidebar: {
       '/tutorial/': getTutorialSidebar(['介绍', '进阶', '高级', 'JointJS+']),
