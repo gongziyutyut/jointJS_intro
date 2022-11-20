@@ -36,7 +36,15 @@ function getTutorialSidebar(group) {
     title: group[1],
     collapsable: false,
     children: [
-      'intermediate/router-params',
+      'intermediate/summary',
+      'intermediate/special_attrs',
+      'intermediate/events',
+      'intermediate/serialization',
+      'intermediate/custom_elements',
+      'intermediate/custom_links',
+      'intermediate/link_labels',
+      'intermediate/element_tools',
+      'intermediate/link_tools',
     ]
   },{
     title: group[2],
