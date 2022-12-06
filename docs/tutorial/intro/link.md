@@ -549,4 +549,4 @@ link.appendLabel({
 
 现在你已经学过了基础部分，你应该已经很自信的可以应用 JointJS 最重要的构成模块——图表（Graphs），画布（Papers），元素(Elements)和连接(Links)。
 
-接下来，我们将前往教程的进阶部分，它介绍了一些方便但更复杂的概念。
+接下来，我们将前往教程的 <a href="/tutorial/intermediate/summary.html">进阶部分</a>，它介绍了一些方便但更复杂的概念。
