@@ -183,3 +183,358 @@ element.attr({
     }
 });
 ~~~
+
+## 连接箭头
+负责连接箭头（link arrowheads）的特殊属性有两个，我们早在 <a href="/tutorial/intro/link.html#连接-link-箭头">基础教程篇</a> 提及过。
++ <code>sourceMarker</code> 和 <code>targetMarker</code> —— 为连接的起点与终点设置一个要求的 SVG 元素类型的箭头。以对象传递的参数中的其他属性是用于设置那个 SVG 元素的 SVG 属性。
+
+连接箭头 （link arrowheads） 的特殊属性需要一个有着原生 SVG 属性的对象。这意味着它们无法理解 JointJS 特殊属性，而且它们无法利用 JointJS 的驼峰式命名转换。为了更好的令编程者理解这些限制，我们强烈建议在箭头标记属性周围使用引号（例如 <code>'type'</code> 而不是 <code>type</code>，<code>''stroke-width''</code> 而不是 <code>strokeWidth</code>）
+
+箭头的 <code>'type'</code> 类型可以是任意有效的 SVG 元素类型。接下来的例子展示了如何使用两个简单的 <code>path</code> 创建一个连接。
+
+尽管两个箭头指向相反方向，但是它们有着相同的路径数据命令。这是因为所有的 <code>targetMarker</code> 值都自动旋转了180度。路径命令的坐标系统原点在连接(link) 的顶端，并且依据连接（link）在该点的斜率旋转。这些特征意味着你可以设计所有箭头，就好像它们都指向左侧，并且都指向局部坐标系统的 0，0点，并且依赖 JointJS 自动的箭头旋转。
+
+注意：如果没有指定 <code>fill</code> 和 <code>stroke</code> 的颜色，那么它们将采用 <code>line.stroke</code> 属性的颜色。
+
+```js
+link.attr({
+    line: {
+        sourceMarker: { // hour hand
+            'type': 'path',
+            'd': 'M 20 -10 0 0 20 10 Z'
+        },
+        targetMarker: { // minute hand
+            'type': 'path',
+            'stroke': 'green',
+            'stroke-width': 2
+            'fill': 'yellow',
+            'd': 'M 20 -10 0 0 20 10 Z'
+        }
+    }
+});
+```
+
+为了创建一个图形箭头，你需要为 <code>'xlink:href'</code> 提供一个链接到图片地址的 URL。然后指定 <code>width</code> 和 <code>height</code>。牢记，你的两个标记应该参考指向左侧的图片。为 <code>targetMarker</code> 提供的图片将会由 JointJS 自动旋转 180°。两个标记都会匹配连接 path 的斜率。如果需要箭头居于中心，记得在 Y 轴方向重新定位（-1/2 高度值）。
+
+```js
+link.attr({
+    line: {
+        sourceMarker: {
+            'type': 'image',
+            'xlink:href': 'http://cdn3.iconfinder.com/data/icons/49handdrawing/24x24/left.png',
+            'width': 24,
+            'height': 24,
+            'y': -12
+        },
+        targetMarker: {
+            'type': 'image',
+            'xlink:href': 'http://cdn3.iconfinder.com/data/icons/49handdrawing/24x24/left.png',
+            'width': 24,
+            'height': 24,
+            'y': -12
+        }
+    }
+});
+```
+
+为了创建一个任意 SVG 类型的箭头，仅需要指定适当的 <code>'type'</code>，然后提供原生 SVG 属性去装饰它。记住 <code>'circle'</code> 和 <code>'ellipse'</code> SVG元素原点在他们的中心。如果你不想他们超过连接的终点，他们需要使用 <code>'cx'</code> 属性重新定位（设置的值同 'r'的值）
+```js
+link.attr({
+    line: {
+        sourceMarker: {
+            'type': 'rect',
+            'width': 50,
+            'height': 10,
+            'y': -5,
+            'fill': 'rgba(255,0,0,0.3)',
+            'stroke': 'black'
+        },
+        targetMarker: {
+            'type': 'circle',
+            'r': 10,
+            'cx': 10,
+            'fill': 'rgba(0,255,0,0.3)',
+            'stroke': 'black'
+        }
+    }
+});
+```
+## 连接的相对定位
+连接上的多个特殊属性允许你相对于连接(link) 的连接路径定位子元素。
++ <code>connection</code> —— 如果设置为 true，子元素将跟随连接路径，仅适用于 path 子元素
++ <code>atConnectionLength</code> —— 设置路径起点的绝对距离，路径起点位于子元素的锚放置的位置。负距离是从连接路径的末端计算的。在要求长度下，依据连接斜率旋转子元素。
++ <code>atConnectionRatio</code> —— 设置路径起点的相对距离，路径起点位于子元素的锚放置的位置。接受 0 - 1 之间的数值。依据要求的斜率旋转子元素。
+
+这些属性对于在连接路径上添加符号和箭头是非常完美的，而且可以令它们依据连接的斜率旋转，我们用一个自定义的连接类型来说明：
+```js
+var CustomLink = joint.dia.Link.define('examples.CustomLink', {
+    attrs: {
+        line: {
+            connection: true,
+            fill: 'none',
+            stroke: 'orange',
+            strokeWidth: 2,
+            sourceMarker: {
+                'type': 'circle',
+                'r': 4,
+                'fill': 'white',
+                'stroke': 'orange',
+                'stroke-width': '2'
+            },
+            targetMarker: {
+                'type': 'circle',
+                'r': 4,
+                'fill': 'white',
+                'stroke': 'orange',
+                'stroke-width': '2'
+            }
+        },
+        arrowhead: {
+            d: 'M -20 -10 0 0 -20 10 Z',
+            fill: 'orange',
+            stroke: 'none'
+        },
+        symbol: {
+            d: 'M -20 -20 20 20',
+            stroke: 'black',
+            targetMarker: {
+                'type': 'path',
+                'd': 'M 0 0 10 -5 10 5 Z',
+                'fill': 'black',
+                'stroke': 'none'
+            }
+        }
+    }
+}, {
+    markup: [{
+        tagName: 'path',
+        selector: 'line'
+    }, {
+        tagName: 'path',
+        selector: 'arrowhead'
+    }, {
+        tagName: 'path',
+        selector: 'symbol'
+    }]
+});
+
+var link = new CustomLink();
+link.attr({
+    symbol: {
+        atConnectionRatio: 0.25
+    },
+    arrowhead: {
+        atConnectionRatio: 0.75,
+    }
+});
+```
+
+## 连接的标签子元素
+特殊属性也允许我们创建自定义的标记子元素 —— 包括那些依据连接路径调整旋转的和始终保持相同角度的。然而需要牢记，连接子元素比起连接标签更难动态设置及使用（JointJS 没有内置的 API 来实现这个），而且当使用这种方式时，有着非常重要的限制：
++ 它们无法使用 <code>ref</code> 属性。这意味着它们不能基于文本 bbox 的浏览器计算尺寸来自动调整它们的宽度和高度。由编程者提供一个合适的宽度值和高度值来适应标签文本。
+
+出于上述原因，我们建议使用 <a>连接标签API</a>。
+
+使用如下的两个特殊属性可以启用连接标签不保持连接梯度。
+
++ <code>atConnectionLengthIgnoreGradient</code> —— 设置子元素锚点放置位置距离路径起点的绝对距离。负值距离从连接末端计算。不依据路径斜率旋转子元素
++ <code>atConnectionRatioIgnoreGradient</code> —— 设置子元素锚点放置位置距离路径起点的相对距离。接受值为 0 - 1。 不依据路径斜率旋转子元素
+
+（先前介绍的 <code>atConnectionLength</code> / <code>atConnectionRatio</code> 实际是别名，更详细的名字是：<code>atConnectionLengthKeepGradient</code> / <code>atConnectionRatioKeepGradient</code>。）在这两种情况下（无论是否保持连接斜率），可以通过巧妙地使用原生的 SVG 属性 <code>x</code> 和 <code>y</code> 实现连接标签的偏移。
+
+我们用接下来的 demo 进行说明。以连接标签子元素定位的方式自定义一个连接类型。这样处理的目的是为了模仿连接标签定位与偏移示例中展示的功能。红色星号标记着连接路径上偏移元素的参考点。
+
+```js
+var CustomLink = joint.dia.Link.define('examples.CustomLink', {
+    attrs: {
+        line: {
+            connection: true,
+            fill: 'none',
+            stroke: '#333333',
+            strokeWidth: 2,
+            strokeLinejoin: 'round',
+            targetMarker: {
+                'type': 'path',
+                'd': 'M 10 -5 0 0 10 5 z'
+            }
+        },
+        relativeLabel: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        relativeLabelBody: {
+            x: -15,
+            y: -10,
+            width: 30,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        },
+        absoluteLabel: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        absoluteLabelBody: {
+            x: -15,
+            y: -10,
+            width: 30,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        },
+        absoluteReverseLabel: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        absoluteReverseLabelBody: {
+            x: -15,
+            y: -10,
+            width: 30,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        },
+        offsetLabelPositive: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        offsetLabelPositiveBody: {
+            width: 120,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        },
+        offsetLabelNegative: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        offsetLabelNegativeBody: {
+            width: 120,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        },
+        offsetLabelAbsolute: {
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle',
+            fill: 'black',
+            fontSize: 12
+        },
+        offsetLabelAbsoluteBody: {
+            width: 140,
+            height: 20,
+            fill: 'white',
+            stroke: 'black'
+        }
+    }
+}, {
+    markup: [{
+        tagName: 'path',
+        selector: 'line'
+    }, {
+        tagName: 'rect',
+        selector: 'relativeLabelBody'
+    }, {
+        tagName: 'text',
+        selector: 'relativeLabel'
+    }, {
+        tagName: 'rect',
+        selector: 'absoluteLabelBody'
+    }, {
+        tagName: 'text',
+        selector: 'absoluteLabel'
+    }, {
+        tagName: 'rect',
+        selector: 'absoluteReverseLabelBody'
+    }, {
+        tagName: 'text',
+        selector: 'absoluteReverseLabel'
+    }, {
+        tagName: 'rect',
+        selector: 'offsetLabelPositiveBody'
+    }, {
+        tagName: 'text',
+        selector: 'offsetLabelPositive'
+    }, {
+        tagName: 'rect',
+        selector: 'offsetLabelNegativeBody'
+    }, {
+        tagName: 'text',
+        selector: 'offsetLabelNegative'
+    }, {
+        tagName: 'rect',
+        selector: 'offsetLabelAbsoluteBody'
+    }, {
+        tagName: 'text',
+        selector: 'offsetLabelAbsolute'
+    }]
+});
+
+var link = new CustomLink();
+link.attr({
+    relativeLabel: {
+        atConnectionRatio: 0.25,
+        text: '0.25'
+    },
+    relativeLabelBody: {
+        atConnectionRatio: 0.25
+    },
+    absoluteLabel: {
+        atConnectionLength: 150,
+        text: '150'
+    },
+    absoluteLabelBody: {
+        atConnectionLength: 150
+    },
+    absoluteReverseLabel: {
+        atConnectionLength: -100,
+        text: '-100'
+    },
+    absoluteReverseLabelBody: {
+        atConnectionLength: -100
+    },
+    offsetLabelPositive: {
+        atConnectionRatio: 0.66,
+        y: 40,
+        text: 'keepGradient: 0,40'
+    },
+    offsetLabelPositiveBody: {
+        atConnectionRatio: 0.66,
+        x: -60, // 0 + -60
+        y: 30 // 40 + -10
+    },
+    offsetLabelNegative: {
+        atConnectionRatio: 0.66,
+        y: -40,
+        text: 'keepGradient: 0,-40'
+    },
+    offsetLabelNegativeBody: {
+        atConnectionRatio: 0.66,
+        x: -60, // 0 + -60
+        y: -50 // -40 + -10
+    },
+    offsetLabelAbsolute: {
+        atConnectionRatioIgnoreGradient: 0.66,
+        x: -40,
+        y: 80,
+        text: 'ignoreGradient: -40,80'
+    },
+    offsetLabelAbsoluteBody: {
+        atConnectionRatioIgnoreGradient: 0.66,
+        x: -110, // -40 + -70
+        y: 70 // 80 + -10
+    }
+});
+```
+
+进阶教程的下一部分，我们将学习如何利用 JointJS 事件支持用户的交互。
