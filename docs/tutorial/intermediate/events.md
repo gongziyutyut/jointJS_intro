@@ -108,3 +108,199 @@ graph.on('change:target', function(cell) {
 其他的图表事件监听器提供了不同的参数。通用的<code>'graph:change'</code>仅仅接收变化的单元，并不是新值（<code>callback(cell)</code>）。<code>'graph:add'</code> 事件监听器接收增加的元素及更新的元素数组（<code>callback(cell, newCells)</code>），然而<code>'graph:remove'</code> 事件监听器接收删除的元素和初始元素数组（<code>callback(cell, oldCells)</code>）
 
 类似内置的画布事件，这些事件也会由用户交互的单独的图形单元（element 或者 link 模型）触发。因此，你可以通过分别在每个元素上添加监听器完成如上相同的功能。尽管这种方法有其用途，但是我们依然建议使用 graph 监听器；在 Javascript 中相较于为单个元素添加数十个监听器，使用单个监听器覆盖所有的交互是更好的实现方式。
+
+图表也可以对其自身属性的变化作出响应。例如，调用 <code>graph.set('property', true)</code> 将会触发 graph 之上的 <code>'change:property'</code>。 graph 属性的事件监听器接收 graph 的引用和新值作为参数 <code>(callback(graph, newValue))</code>。
+
+注意，出于向后兼容性的考虑。如果我们不小心选择了自定义 graph 属性名容易导致混乱。如果我们命名自定义属性为 position 而不是 property，那么触发的事件将会识别为 <code>'change:position'</code>，并且会被我们示例中的事件监听器捕捉到。回调函数将不得不处理一系列意料之外的参数。为了避免命名冲突，我们强烈建议为自定义的 graph 属性采用命名约束—— 例如，变量名以 'graph' 开始（<code>graphProperty and graphPosition</code>） 如果你需要支持自定义的属性，你可以通过断言 cell 参数不是实际的图表来确保自己安全。
+~~~js
+graph.on('change:position', function(cell) {
+    if (cell instanceof joint.dia.Graph) return;
+    var center = cell.getBBox().center();
+    var label = center.toString();
+    cell.attr('label/text', label);
+});
+~~~
+
+## 子元素事件属性
+
+在你的图表中，为单独的组件添加自定义事件最简单的方式就是使用 event 这个特殊属性。
++ <code>event</code> —— 为子元素的模型上添加指定的事件，那么当 JointJS 检测到子元素上的手指按下事件（mousedown/touchstart DOM event） 就会触发。
+
+这一属性对于创建带有自定义工具子元素的 element 十分有用。然后你可以简单地在 paper 上增加事件监听器，当事件检测到后就会得到调用。
+
+在下面的例子中，我们定义了一个带有按钮子元素的 element 类型。我们在按钮上附加了自定义的事件 <code>'element:button:pointerdown'</code> 并进行了监听。当按钮被摁下时，这个 element 的 body 及 label 被隐藏（minimized）并且按钮的符号也改变了，新的符号指示着 element 现在可以放大。
+
+~~~js
+var CustomElement = joint.dia.Element.define('examples.CustomElement', {
+    attrs: {
+        body: {
+            width: 'calc(w)',
+            height: 'calc(h)',
+            strokeWidth: 2,
+            stroke: 'black',
+            fill: 'white'
+        },
+        label: {
+            textVerticalAnchor: 'middle',
+            textAnchor: 'middle',
+            x: 'calc(0.5*w)',
+            y: 'calc(0.5*h)',
+            fontSize: 14,
+            fill: 'black'
+        },
+        button: {
+            cursor: 'pointer',
+            ref: 'buttonLabel',
+            width: 'calc(1.5*w)',
+            height: 'calc(1.5*h)',
+            x: 'calc(x-calc(0.25*w))',
+            y: 'calc(y-calc(0.25*h))'
+        },
+        buttonLabel: {
+            pointerEvents: 'none',
+            x: 'calc(w)',
+            y: 0,
+            textAnchor: 'middle',
+            textVerticalAnchor: 'middle'
+        }
+    }
+}, {
+    markup: [{
+        tagName: 'rect',
+        selector: 'body',
+    }, {
+        tagName: 'text',
+        selector: 'label'
+    }, {
+        tagName: 'rect',
+        selector: 'button'
+    }, {
+        tagName: 'text',
+        selector: 'buttonLabel'
+    }]
+});
+
+var element = new CustomElement();
+element.position(250, 30);
+element.resize(100, 40);
+element.attr({
+    label: {
+        pointerEvents: 'none',
+        visibility: 'visible',
+        text: 'Element'
+    },
+    body: {
+        cursor: 'default',
+        visibility: 'visible'
+    },
+    button: {
+        event: 'element:button:pointerdown',
+        fill: 'orange',
+        stroke: 'black',
+        strokeWidth: 2
+    },
+    buttonLabel: {
+        text: '＿', // fullwidth underscore
+        fill: 'black',
+        fontSize: 8,
+        fontWeight: 'bold'
+    }
+});
+element.addTo(graph);
+
+paper.on('element:button:pointerdown', function(elementView, evt) {
+    evt.stopPropagation(); // stop any further actions with the element view (e.g. dragging)
+
+    var model = elementView.model;
+
+    if (model.attr('body/visibility') === 'visible') {
+        model.attr('body/visibility', 'hidden');
+        model.attr('label/visibility', 'hidden');
+        model.attr('buttonLabel/text', '＋'); // fullwidth plus
+
+    } else {
+        model.attr('body/visibility', 'visible');
+        model.attr('label/visibility', 'visible');
+        model.attr('buttonLabel/text', '＿'); // fullwidth underscore
+    }
+});
+~~~
+
+## 自定义视图事件
+对于高级的事件定义，我们需要深入研究自定义视图。这是一个高级内容，有着更强大的选项。此处，我们专注于利用自定义事件拓展我们的视图对象。
+
+Paper 对象有两个选项决定了用于渲染图表组件的视图：
++  <code> elementView </code> — 设置画布中渲染 Element 模型的 ElementView。默认是<code> joint.dia.ElementView </code>
++ <code> linkView </code> — 设置画布中渲染 Link 模型的  LinkView。默认是<code>  joint.dia.LinkView </code>
+
+我们将使用这俩个配置项来提供拓展版本的 <code>default ElementView and LinkView</code>。这个例子是去除双击的元素。
+~~~js
+var paper = new joint.dia.Paper({
+    el: document.getElementById('paper-custom-view-events'),
+    model: graph,
+    width: 600,
+    height: 100,
+    gridSize: 1,
+    background: {
+        color: 'white'
+    },
+    interactive: false, // disable default interaction (e.g. dragging)
+    elementView: joint.dia.ElementView.extend({
+        pointerdblclick: function(evt, x, y) {
+            this.model.remove();
+        }
+    }),
+    linkView: joint.dia.LinkView.extend({
+        pointerdblclick: function(evt, x, y) {
+            this.model.remove();
+        }
+    })
+});
+~~~
+
+## 自定义视图事件传播
+
+如果通知 <code>CellView and Paper</code> 事件，那么你可以通过内置的 paper 机制来保持对事件的识别。例如，在我们自定义的视图鼠标双击事件中，我们将包含 this：
+
+~~~js
+joint.dia.CellView.prototype.pointerdblclick.apply(this, arguments);
+this.notify('element:pointerdblclick', evt, x, y);
+~~~
+
+如果你需要保持默认的事件处理行为，这会很有用！下面的例子集成了在 cell 上点击展示信息元素和画布事件 demo 中移除组件。
+~~~js
+var paper = new joint.dia.Paper({
+    el: document.getElementById('paper-custom-view-events'),
+    model: graph,
+    width: 600,
+    height: 100,
+    gridSize: 1,
+    background: {
+        color: 'white'
+    },
+    interactive: false, // disable default interaction (e.g. dragging)
+    elementView: joint.dia.ElementView.extend({
+        pointerdblclick: function(evt, x, y) {
+            joint.dia.CellView.prototype.pointerdblclick.apply(this, arguments);
+            this.notify('element:pointerdblclick', evt, x, y);
+            this.model.remove();
+        }
+    }),
+    linkView: joint.dia.LinkView.extend({
+        pointerdblclick: function(evt, x, y) {
+            joint.dia.CellView.prototype.pointerdblclick.apply(this, arguments);
+            this.notify('link:pointerdblclick', evt, x, y);
+            this.model.remove();
+        }
+    })
+});
+
+paper.on('cell:pointerdblclick', function(cellView) {
+    var isElement = cellView.model.isElement();
+    var message = (isElement ? 'Element' : 'Link') + ' removed';
+    info.attr('label/text', message);
+
+    info.attr('body/visibility', 'visible');
+    info.attr('label/visibility', 'visible');
+});
+~~~
