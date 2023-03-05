@@ -139,3 +139,46 @@ Markup 通常作为 <code>define()</code> 函数的第三个参数来提供，�
     }]
 }
 ~~~
+
+对于元素属性靶向子元素而言，选择器是非常重要的。尽管提供选择器去辨别子元素并未严格要求，但是它明显使得 JointJS 更快速，因为它可以避免查找 DOM。如果你确实不想为子元素的选择器发明一个自定义的名字，你可以使用子元素的标签名（每个标签最多只能有一个子元素；选择器名称必须是独一无二的）。
+
+~~~js
+{
+    markup: [{
+        tagName: 'rect',
+        selector: 'rect',
+    }, {
+        tagName: 'text',
+        selector: 'text'
+    }]
+}
+~~~
+
+## 默认属性
+默认属性通常在 <code>define()</code> 函数的第二个参数的内部提供（默认的实例属性）。（这是因为元素类型的所有实例都期望有它们自己独一无二的属性，因此从原型继承可能会导致不必要的开销）。
+
+在 attrs 对象中，keys 与子元素的选择器相匹配，正如在 markup 中定义的那样。每一个子元素都需要有一个属性名和值键值对的对象。每一个属性可以是原生 SVG 属性或者 <a>JointJS 特殊属性</a>
+
+在 <code>joint.shapes.standard.Rectangle</code> 中，我们可以参考 <code>body</code> 看到子元素（例如 图形的  SVGRectElement）有其默认的 width 和 height，其值依据形状模型的大小设置（使用 calc() 函数）。关于 calc() 函数，在我们的 <a href="">属性</a> 文档可以了解更多。除了大小，你还可以看到填充和画线的样式。<code>label</code> 子元素（图形的 SVGTextElement 组件）有它的文本锚点，设置于文本盒模型的中心；这个点后续通过 x 和 y 属性被定位到模型盒的中心。它的字体尺寸及填充颜色也相继被指定。
+
+~~~js
+{
+    attrs: {
+        body: {
+            width: 'calc(w)',
+            height: 'calc(h)',
+            strokeWidth: 2,
+            stroke: '#000000',
+            fill: '#FFFFFF'
+        },
+        label: {
+            textVerticalAnchor: 'middle',
+            textAnchor: 'middle',
+            x: 'calc(0.5*w)',
+            y: 'calc(0.5*h)',
+            fontSize: 14,
+            fill: '#333333'
+        }
+    }
+}
+~~~
