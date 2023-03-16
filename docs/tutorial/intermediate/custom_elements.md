@@ -182,3 +182,6 @@ Markup 通常作为 <code>define()</code> 函数的第三个参数来提供，�
     }
 }
 ~~~
+
+我们提到了 model size —— body 的尺寸取决于它，但它是什么？ 每当用户
+在 joint.shapes.standard.Rectangle 的实例上调用 <code> element.resize() </code> 时，用户可以设定 model size。例如，如果我们使用 <code> element.resize(100, 100) </code>, 那么参考尺寸为 100px * 100px。因此，如果没有应用变形， body 的尺寸将是（100， 100）。模型盒自身是不可见的，只有通过参考子元素才变得可视。此处，它的子元素是 body 子元素。
